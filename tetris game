@@ -1,0 +1,105 @@
+import pygame
+import random
+
+# Initialize Pygame
+pygame.init()
+
+# Set up the game window
+screen_width, screen_height = 800, 600
+screen = pygame.display.set_mode((screen_width, screen_height))
+pygame.display.set_caption("Tetris")
+
+# Define colors
+BLACK = (0, 0, 0)
+WHITE = (255, 255, 255)
+RED = (255, 0, 0)
+GREEN = (0, 255, 0)
+BLUE = (0, 0, 255)
+
+# Game variables
+block_size = 30
+columns = screen_width // block_size
+rows = screen_height // block_size
+grid = [[BLACK] * columns for _ in range(rows)]
+
+# Tetromino shapes
+tetrominoes = [
+    [[1, 1, 1, 1]],
+    [[1, 1], [1, 1]],
+    [[1, 1, 0], [0, 1, 1]],
+    [[0, 1, 1], [1, 1, 0]],
+    [[1, 1, 1], [0, 1, 0]],
+    [[1, 1, 1], [1, 0, 0]],
+    [[1, 1, 1], [0, 0, 1]]
+]
+
+# Initialize the game loop
+clock = pygame.time.Clock()
+game_over = False
+
+def draw_grid():
+    for row in range(rows):
+        for col in range(columns):
+            pygame.draw.rect(screen, grid[row][col], (col * block_size, row * block_size, block_size, block_size))
+            pygame.draw.rect(screen, WHITE, (col * block_size, row * block_size, block_size, block_size), 1)
+
+def draw_tetromino(tetromino, tetromino_x, tetromino_y):
+    for row in range(len(tetromino)):
+        for col in range(len(tetromino[row])):
+            if tetromino[row][col]:
+                pygame.draw.rect(screen, RED, ((tetromino_x + col) * block_size, (tetromino_y + row) * block_size, block_size, block_size))
+
+def check_collision(tetromino, tetromino_x, tetromino_y):
+    for row in range(len(tetromino)):
+        for col in range(len(tetromino[row])):
+            if tetromino[row][col]:
+                if tetromino_x + col < 0 or tetromino_x + col >= columns or tetromino_y + row >= rows or grid[tetromino_y + row][tetromino_x + col] != BLACK:
+                    return True
+    return False
+
+def merge_tetromino(tetromino, tetromino_x, tetromino_y):
+    for row in range(len(tetromino)):
+        for col in range(len(tetromino[row])):
+            if tetromino[row][col]:
+                grid[tetromino_y + row][tetromino_x + col] = GREEN
+
+def remove_completed_rows():
+    full_rows = []
+    for row in range(rows):
+        if all(cell != BLACK for cell in grid[row]):
+            full_rows.append(row)
+    for row in full_rows:
+        del grid[row]
+        grid.insert(0, [BLACK] * columns)
+
+def generate_new_tetromino():
+    tetromino = random.choice(tetrominoes)
+    tetromino_x = columns // 2
+    tetromino_y = 0
+    return tetromino, tetromino_x, tetromino_y
+
+current_tetromino, current_tetromino_x, current_tetromino_y = generate_new_tetromino()
+
+# Game loop
+while not game_over:
+    for event in pygame.event.get():
+        if event.type == pygame.QUIT:
+            game_over = True
+
+        if event.type == pygame.KEYDOWN:
+            if event.key == pygame.K_LEFT:
+                current_tetromino_x -= 1
+                if check_collision(current_tetromino, current_tetromino_x, current_tetromino_y):
+                    current_tetromino_x += 1
+
+            elif event.key == pygame.K_RIGHT:
+                current_tetromino_x += 1
+                if check_collision(current_tetromino, current_tetromino_x, current_tetromino_y):
+                    current_tetromino_x -= 1
+
+            elif event.key == pygame.K_DOWN:
+                current_tetromino_y += 1
+                if check_collision(current_tetromino, current_tetromino_x, current_tetromino_y):
+                    current_tetromino_y -= 1
+
+  
